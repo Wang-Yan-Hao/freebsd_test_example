@@ -8,7 +8,7 @@ I also write a blog to introduct FreeBSD Test Suit with chinese. Here is the lin
 # Folder introduction
 usr/src/bin and /usr/src/etc is related to this pwd example. usr/src/usr.bin is just a referenct, it is related for `wc` test.
 
-# Main step
+# Main step to prepare environment
 In the moment I write this test the `pwd` has no any test case (/usr/src/bin/pwd/tests folder is not exist). So we are adding a new test program.
 
 1. Create an empty tests subdirecotyr (/usr/src/bin/pwd/tests).
@@ -23,9 +23,22 @@ In the moment I write this test the `pwd` has no any test case (/usr/src/bin/pwd
 5. Edit the parent Makefile to recurse into the new subdirectory. Because our tests case is just one layer under /usr/src/bin/pwd/, so we don't need to recurse into to new subdirectory. If you need to do this pls refer [root/share/examples/tests/Makefile](https://cgit.freebsd.org/src/tree/share/examples/tests/Makefile).
 6. Edit etc/mtree/BSD.tests.dist to register the new subdirectory. Note that if you are adding tests to, say, usr.bin/du/tests/, the directory you register in the mtree file should be /usr/tests/usr.bin/du/; i.e. the layout under /usr/tests/ must match the layout of /usr/src. We add pwd directory under bin directory.
 
+# Test the test program
+After we finish the step in 'Main step to prepare environment' Chapter. We can start the test program itself (pwd_test.sh). Once we finish it, we need use kyua to run it to assure everything is good. So this chapter tell how to run the test with kyua.
+
+This test example is much special, we don't have any tmp test case exist. So the /usr/tests/bin/pwd folder is not exist. We need create the folder first (The folder generate by etc/mtree/BST.tests.dist in actually system, this is just for test our test program). Then go to the /usr/src/bin/pwd/ to type below command
+```
+$ make obj
+$ make depend
+$ make all install 
+```
+The the test program will be generated on /usr/tests/bin/pwd/. We can see there is our test program, pwd_test (pwd_test: a /usr/libexec/atf-sh script, ASCII text executable) and Kyuafile. We cay type `kyua test` to run the test know and see the test result matrix generate by kyua.
+
 # Testing case of pwd_test.sh
 * Positive test
-    * wd, pwd -L, pwd -P in a simple directory. -> testcase name, base
-    * pwd, pwd -L, pwd -P in a directory with a soft link in tha path. -> testcase name, soft_link
+    * pwd, pwd -L, pwd -P in a simple directory. -> testcase name - basic.
+    * pwd, pwd -L, pwd -P in a directory with a soft link in tha path. -> testcase name - soft_link
 * Negative test
-  * pwd, pwd -L, pwd -P in a directory with broken soft link in tha path. -> testcase name, broken_soft_link
+  * pwd, pwd -L, pwd -P in a directory with broken soft link in tha path. -> testcase name - broken_soft_link
+
+We do the top test and check the ouput of the commadn is correct or not.
