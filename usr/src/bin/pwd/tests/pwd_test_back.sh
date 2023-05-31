@@ -1,4 +1,3 @@
-#! /usr/libexec/atf-sh
 #
 # Copyright (c) 2023 Klara, Inc.
 #
@@ -26,7 +25,9 @@ int main() {
         perror("realpath error");
         return 1;
     }
-    printf("%s %s", current_path, resolved_path);
+    printf("%s\n%s\n", current_path, resolved_path);
+    free(current_path);
+    free(resolved_path);
     return 0;
 }
 EOF
@@ -34,7 +35,6 @@ EOF
     # getcwd is pyhsical path
 	# realpath is pyhsica path
 	read -r getcwd realpath < <(./getcwd_prog)
-    # https://stackoverflow.com/questions/2443085/what-does-command-args-mean-in-the-shell
 
     # Remove the compiled C program
     rm getcwd_prog
@@ -49,17 +49,35 @@ atf_check_pwd() {
 	local getcwd="$2" # pyhsical
 	local realpath="$3" # pyhsical
 
-	# pwd_="$(pwd)" # pyhsical
-	# pwd_L="$(pwd -L)" # logical
-	# pwd_P="$(pwd -P)" # pyhsical
+	pwd_="$(pwd)" # pyhsical
+	pwd_L="$(pwd -L)" # logical
+	pwd_P="$(pwd -P)" # pyhsical
 
-	atf_check -o match:"${getcwd}" pwd
-	# atf_check -o match:"$realpath" pwd
+	atf_check_equal pwd_ getcwd
+	atf_check_equal pwd_ realpath
 
-	# atf_check -o match:"$pwd_environment" pwd -L
+    atf_check_equal pwd_L pwd_environment
 
-	# atf_check -o match:"$getcwd" pwd -P
-	# atf_check -o match:"$realpath" pwd -P
+	atf_check_equal pwd_P getcwd
+	atf_check_equal pwd_P realpath
+}
+
+atf_test_case basic
+basic_head()
+{
+	atf_set "descr" "Basic test case"
+}
+basic_body()
+{
+	# Call the get_output function and capture the three variables
+	output=($(get_output))
+
+	# Access the individual variables
+	pwd_environment="${output[0]}"
+	getcwd="${output[1]}"
+	realpath="${output[2]}"
+
+	atf_check_pwd pwd_environment getcwd realpath
 }
 
 atf_test_case soft_link
@@ -78,14 +96,42 @@ soft_link_head()
 	getcwd="${output[1]}"
 	realpath="${output[2]}"
 
-	atf_check_pwd "$pwd_environment" "$getcwd" "$realpath"
+	atf_check_pwd pwd_environment getcwd realpath
 }
 soft_link_body()
 {
 	atf_check_pwd
 }
 
+atf_test_case broken_soft_link
+broken_soft_link_head()
+{
+	atf_set "descr" "Test on the path which has broken softlink"
+}
+broken_soft_link_body()
+{
+	# Create a broken_soft_link
+	mkdir broken_soft_link_src
+	ln -s ./broken_soft_link_src ./broken_soft_link_dst
+	cd ./broken_soft_link_dst
+	rm -r ../broken_soft_link_src
+
+	# Call the get_output function and capture the three variables
+	output=($(get_output))
+
+	# Access the individual variables
+	pwd_environment="${output[0]}"
+	getcwd="${output[1]}"
+	realpath="${output[2]}"
+
+	# Pyhsical, pwd: .: No such file or directory
+	atf_check_pwd pwd_environment getcwd realpath
+}
+
+
 atf_init_test_cases()
 {
+	atf_add_test_case basic
 	atf_add_test_case soft_link
+	atf_add_test_case broken_soft_link
 }
