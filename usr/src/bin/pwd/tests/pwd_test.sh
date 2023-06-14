@@ -35,24 +35,23 @@ atf_check_pwd() {
 atf_test_case soft_link
 soft_link_head()
 {
+	atf_set "descr" "Test on the path which has softlink"
+}
+soft_link_body()
+{
 	# Create a soft_link and enter it
 	mkdir soft_link_src
 	ln -s ./soft_link_src ./soft_link_dst
 	cd ./soft_link_dst
 
-	# Call the get_output function and capture the three variables
+	# Call the get_output function and capture three variables
 	output=($(get_output))
-
 	# Access the individual variables
 	pwd_environment="${output[0]}"
 	getcwd="${output[1]}"
 	realpath="${output[2]}"
 
 	atf_check_pwd "$pwd_environment" "$getcwd" "$realpath"
-}
-soft_link_body()
-{
-	atf_check_pwd
 }
 
 atf_init_test_cases()

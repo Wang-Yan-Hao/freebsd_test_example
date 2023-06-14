@@ -80,29 +80,6 @@ basic_body()
 	atf_check_pwd pwd_environment getcwd realpath
 }
 
-atf_test_case soft_link
-soft_link_head()
-{
-	# Create a soft_link and enter it
-	mkdir soft_link_src
-	ln -s ./soft_link_src ./soft_link_dst
-	cd ./soft_link_dst
-
-	# Call the get_output function and capture the three variables
-	output=($(get_output))
-
-	# Access the individual variables
-	pwd_environment="${output[0]}"
-	getcwd="${output[1]}"
-	realpath="${output[2]}"
-
-	atf_check_pwd pwd_environment getcwd realpath
-}
-soft_link_body()
-{
-	atf_check_pwd
-}
-
 atf_test_case broken_soft_link
 broken_soft_link_head()
 {
@@ -128,10 +105,9 @@ broken_soft_link_body()
 	atf_check_pwd pwd_environment getcwd realpath
 }
 
-
 atf_init_test_cases()
 {
 	atf_add_test_case basic
-	atf_add_test_case soft_link
+	# atf_add_test_case soft_link
 	atf_add_test_case broken_soft_link
 }
