@@ -1,35 +1,25 @@
-#! /usr/libexec/atf-sh
-#
-# Copyright (c) 2023 Klara, Inc.
-#
-# SPDX-License-Identifier: BSD-2-Clause
-#
-
 get_output() {
 	# PWD environment variable which is logical path 
 	pwd_environment="$PWD"
-	read -r getcwd realpath < <(./get_path)
-    # Return the three variables as an array
-    local result=("$pwd_environment" "$getcwd" "$realpath")
-    echo "${result[@]}"
+	get_path_output="$("${0%/*}"/get_path)"
+	echo "$pwd_environment $get_path_output"
 }
 
-atf_check_pwd() {
-	local pwd_environment="$1" # logical
-	local getcwd="$2" # pyhsical
-	local realpath="$3" # pyhsical
-
-	# pwd_="$(pwd)" # pyhsical
-	# pwd_L="$(pwd -L)" # logical
-	# pwd_P="$(pwd -P)" # pyhsical
-
-	atf_check -o match:"${getcwd}" pwd
-	# atf_check -o match:"$realpath" pwd
-
-	# atf_check -o match:"$pwd_environment" pwd -L
-
-	# atf_check -o match:"$getcwd" pwd -P
-	# atf_check -o match:"$realpath" pwd -P
+atf_test_case basic
+basic_head()
+{
+	atf_set "descr" "Basic test case"
+}
+basic_body()
+{
+	output="$(get_output)"
+	echo "$output" | while IFS=" " read pwd_environment getcwd realpath; do
+		atf_check -o inline:"${getcwd}\n" pwd
+		atf_check -o inline:"${realpath}\n" pwd
+		atf_check -o inline:"${pwd_environment}\n" pwd -L
+		atf_check -o inline:"${getcwd}\n" pwd -P
+		atf_check -o inline:"${realpath}\n" pwd -P
+	done
 }
 
 atf_test_case soft_link
@@ -41,20 +31,39 @@ soft_link_body()
 {
 	# Create a soft_link and enter it
 	mkdir soft_link_src
-	ln -s ./soft_link_src ./soft_link_dst
-	cd ./soft_link_dst
+	ln -s soft_link_src soft_link_dst
+	cd soft_link_dst || exit
 
-	# Call the get_output function and capture three variables
-	output=($(get_output))
-	# Access the individual variables
-	pwd_environment="${output[0]}"
-	getcwd="${output[1]}"
-	realpath="${output[2]}"
+	output="$(get_output)"
+	echo "$output" | while IFS=" " read pwd_environment getcwd realpath; do
+		atf_check -o inline:"${getcwd}\n" pwd
+		atf_check -o inline:"${realpath}\n" pwd
+		atf_check -o inline:"${pwd_environment}\n" pwd -L
+		atf_check -o inline:"${getcwd}\n" pwd -P
+		atf_check -o inline:"${realpath}\n" pwd -P
+	done
+}
 
-	atf_check_pwd "$pwd_environment" "$getcwd" "$realpath"
+atf_test_case broken_soft_link
+broken_soft_link_head()
+{
+	atf_set "descr" "Test on the path which has broken softlink"
+}
+broken_soft_link_body()
+{
+	mkdir broken_soft_link_src
+	ln -s broken_soft_link_src broken_soft_link_dst
+    cd broken_soft_link_dst || exit
+	rm -r ../broken_soft_link_src
+
+	atf_check -s exit:1 -e inline:"pwd: .: No such file or directory\n" pwd
+	atf_check -s exit:1 -e inline:"pwd: .: No such file or directory\n" pwd -L
+	atf_check -s exit:1 -e inline:"pwd: .: No such file or directory\n" pwd -P
 }
 
 atf_init_test_cases()
 {
+	atf_add_test_case basic
 	atf_add_test_case soft_link
+	atf_add_test_case broken_soft_link
 }

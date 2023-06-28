@@ -30,7 +30,8 @@ check_size()
 {
 	file=$1
 	sz=$2
-
+	# -o inline:_value_  compares stdout with inline value
+	# '' ensure that %z is passed as-is to the stat command for processing
 	atf_check -o inline:"$sz\n" stat -f '%z' $file
 }
 
@@ -39,6 +40,8 @@ basic_body()
 {
 	echo "foo" > bar
 
+	# Use 'cp' to copy 'bar' to 'baz'
+	# Use atf_check to check if it execute correct
 	atf_check cp bar baz
 	check_size baz 4
 }
@@ -47,13 +50,24 @@ atf_test_case basic_symlink
 basic_symlink_body()
 {
 	echo "foo" > bar
+
+	# Create a symbolic link 'baz' pointing to 'bar'
 	ln -s bar baz
 
 	atf_check cp baz foo
+
+	# Verify that 'foo' is not a symbolic link
 	atf_check test '!' -L foo
 
+	# -e action:arg  Analyzes standard error (syntax identical to above)
+	# -s qual:value  Analyzes termination status.
+	# Attempt to copy 'baz' to 'baz' (identical source and target)
+	# Expect an error message since it's not supposed to copy
 	atf_check -e inline:"cp: baz and baz are identical (not copied).\n" \
 	    -s exit:1 cp baz baz
+
+	# Attempt to copy 'baz' to 'bar' (identical source and target)
+	# Expect an error message since it's not supposed to copy
 	atf_check -e inline:"cp: bar and baz are identical (not copied).\n" \
 	    -s exit:1 cp baz bar
 }
@@ -64,6 +78,10 @@ chrdev_body()
 	echo "foo" > bar
 
 	check_size bar 4
+
+	# Use 'cp' to copy /dev/null to 'trunc'
+	# /dev/null, null device is a device file that discards all data written to it but reports 
+	# that the write operation succeeded.
 	atf_check cp /dev/null trunc
 	check_size trunc 0
 	atf_check cp bar trunc
@@ -209,6 +227,7 @@ files_are_equal()
 	atf_check test "$(stat -f "%d %i" "$1")" != "$(stat -f "%d %i" "$2")"
 	atf_check cmp "$1" "$2"
 }
+
 
 atf_test_case sparse_leading_hole
 sparse_leading_hole_body()

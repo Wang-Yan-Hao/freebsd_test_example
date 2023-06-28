@@ -3,8 +3,7 @@
 PACKAGE=	tests
 
 ATF_TESTS_SH=	pwd_test
-TESTSDIR=	${TESTSBASE}/bin/pwd
-
-KYUAFILE=	yes
+PROGS+=		get_path
+BINDIR=		${TESTSDIR}
 
 .include <bsd.test.mk>

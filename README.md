@@ -6,7 +6,9 @@ The test use ATF and shell to write whcih ATF is FreeBSD recommend.
 I also write a blog to introduct FreeBSD Test Suit with chinese. Here is the link - [FreeBSD Test Suit 介紹](https://cozy-kola.medium.com/freebsd-kernel-unit-test-e21be1ab2b3a).
 
 # Folder introduction
-usr/src/bin and /usr/src/etc is related to this pwd example. usr/src/usr.bin is just a referenct, it is related for `wc` test.
+The layout follows the FreeBSD layout. The usr/src/ put our `pwd` test case. The example put some existing code to give reference. For example, we can learn what to do if we want to use the C function in our test case. We need to write another C file to use, just like what `cp` test does in the example folder ...
+
+In the example, I add my_summuary.md which does not exist in src code. This is what I summary about the tool.
 
 # Main step to prepare environment
 In the moment I write this test the `pwd` has no any test case (/usr/src/bin/pwd/tests folder is not exist). So we are adding a new test program.
