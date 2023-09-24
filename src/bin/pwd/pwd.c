@@ -128,13 +128,12 @@ getcwd_logical(void) // 檢查 $PWD 環境變數，獲得 logical 位置。
 	 * Check that $PWD is an absolute logical pathname referring to
 	 * the current working directory.
 	 */
-	if ((pwd = getenv("PWD")) != NULL && *pwd == '/') { // 檢查是否為 NULL，並且 pwd 要從 / 開始
+	if ((pwd = getenv("PWD")) != NULL && *pwd == '/') { // Check if it is NULL and pwd should start at /
 		if (stat(pwd, &lg) == -1 || stat(".", &phy) == -1) // get file attribute by logical path and physical path
 			return (NULL);
 		if (lg.st_dev == phy.st_dev && lg.st_ino == phy.st_ino) // check device number and inode number, https://stackoverflow.com/questions/47078477/what-is-the-device-of-inode
 			return (pwd);
 	}
-	// 常 errno 數是針對各種錯誤狀況指派給 errno 的值。https://learn.microsoft.com/zh-tw/cpp/c-runtime-library/errno-constants?view=msvc-170
-	errno = ENOENT; // Error NO ENTity, https://stackoverflow.com/questions/19902828/why-does-enoent-mean-no-such-file-or-directory
+	errno = ENOENT; // Error NO Entity, https://stackoverflow.com/questions/19902828/why-does-enoent-mean-no-such-file-or-directory
 	return (NULL);
 }

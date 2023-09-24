@@ -1,46 +1,167 @@
 # freebsd_test_example
-Record how to write a test for FreeBSD. This example write a test for `pwd` command. The main reference of the step to write the test is from FreeBSD wiki [DeveloperHowTo](https://wiki.freebsd.org/TestSuite/DeveloperHowTo), [Structure](https://wiki.freebsd.org/TestSuite/Structure) and [TestingFreeBSDExamples](https://wiki.freebsd.org/TestingFreeBSDExamples).
 
-The test use ATF and shell to write whcih ATF is FreeBSD recommend.
+This guide demonstrates how to write a test for FreeBSD. In this example, we will create a test for the pwd command.
 
-I also write a blog to introduct FreeBSD Test Suit with chinese. Here is the link - [FreeBSD Test Suit 介紹](https://cozy-kola.medium.com/freebsd-kernel-unit-test-e21be1ab2b3a).
+I have also written a blog post introducing the FreeBSD Test Suite in Chinese. You can find the blog post here: [FreeBSD Test Suite 介绍](https://cozy-kola.medium.com/freebsd-kernel-unit-test-e21be1ab2b3a).
 
-# Folder introduction
-The layout follows the FreeBSD layout. The usr/src/ put our `pwd` test case. The example put some existing code to give reference. For example, we can learn what to do if we want to use the C function in our test case. We need to write another C file to use, just like what `cp` test does in the example folder ...
+## Folder introduction
 
-In the example, I add my_summuary.md which does not exist in src code. This is what I summary about the tool.
+The directory structure follows the standard layout used in FreeBSD. The `src/` directory contains our `pwd` test case, while the `example` directory includes some existing code along with my comments to provide reference.
 
-# Main step to prepare environment
-In the moment I write this test the `pwd` has no any test case (/usr/src/bin/pwd/tests folder is not exist). So we are adding a new test program.
 
-1. Create an empty tests subdirecotyr (/usr/src/bin/pwd/tests).
-2. Create the test program source file (/usr/src/bin/pwd/tests/pwd_test.sh)
-3. Add the new test program to the existing Makefile (/usr/src/bin/pwd/Makefile). We add this code.
+## Main step to write test
+
+Let's take the `pwd` command as an example. Initially, it does not have a test directory (i.e., `src/bin/pwd/tests` does not exist). To add a test, follow these steps:
+
+1. Create an empty tests subdirectory (e.g., `src/bin/pwd/tests`).
+2. Create the source file for the test program (e.g., `src/bin/pwd/tests/pwd_test.sh`).
+3. Add the new test program to the existing Makefile (e.g., `src/bin/pwd/Makefile`). Include the following code:
     ```
+    .include <src.opts.mk>
+
     HAS_TESTS=
     SUBDIR.${MK_TESTS}+= tests # `${MK_TESTS}` requires src.opts.mk or bsd.own.mk
     ```
-    This code target is for build and install tests folder via MK_TESTS knob.
-4. Create the Makefile for the directory (/usr/src/bin/pwd/tests/Makefile). Refer to share/examples/tests/ for Makefile sample code. This Makefile is for create the test program /usr/tests/bin/pwd/pwd_test.
-5. Edit the parent Makefile to recurse into the new subdirectory. Because our tests case is just one layer under /usr/src/bin/pwd/, so we don't need to recurse into to new subdirectory. If you need to do this pls refer [root/share/examples/tests/Makefile](https://cgit.freebsd.org/src/tree/share/examples/tests/Makefile).
-6. Edit etc/mtree/BSD.tests.dist to register the new subdirectory. Note that if you are adding tests to, say, usr.bin/du/tests/, the directory you register in the mtree file should be /usr/tests/usr.bin/du/; i.e. the layout under /usr/tests/ must match the layout of /usr/src. We add pwd directory under bin directory.
+    This code is used to build and install the tests folder using the `MK_TESTS` knob.
+4. Create a Makefile for the directory (e.g., `src/bin/pwd/tests/Makefile`). You can refer to `share/examples/tests/` for a sample Makefile code. This Makefile is used to create the test program `/usr/tests/bin/pwd/pwd_test`.
+5. Edit the parent Makefile to include the new subdirectory. Since our test cases are only one layer under `src/bin/pwd/`, there is no need to recurse into a new subdirectory. If you need to do this, please refer to [`root/share/examples/tests/Makefile`](https://cgit.freebsd.org/src/tree/share/examples/tests/Makefile) or the `example/src/tests/sys/geom/Makefile` for guidance.
+6. Edit `etc/mtree/BSD.tests.dist` to register the new subdirectory. Note that if you are adding tests to a directory like `usr.bin/du/tests/`, the directory you register in the mtree file should be `usr/tests/usr.bin/du/`. In other words, the layout under `/usr/tests/` must match the layout of `/usr/src`. We are adding the `pwd` directory under the `bin` directory.
 
-# Test the test program
-After we finish the step in 'Main step to prepare environment' Chapter. We can start the test program itself (pwd_test.sh). Once we finish it, we need use kyua to run it to assure everything is good. So this chapter tell how to run the test with kyua.
+# Testing the Test Program
 
-This test example is much special, we don't have any tmp test case exist. So the /usr/tests/bin/pwd folder is not exist. We need create the folder first (The folder generate by etc/mtree/BST.tests.dist in actually system, this is just for test our test program). Then go to the /usr/src/bin/pwd/ to type below command
+After completing the steps outlined in the "Main Steps to Prepare the Environment" section, you can now begin testing the test program (`pwd_test.sh`). This chapter explains how to run the test using Kyua to ensure everything functions correctly.
+
+In this particular test example, there are no pre-existing temporary test cases. Therefore, the `/usr/tests/bin/pwd` folder doesn't exist initially. You need to create this folder manually (the folder is generated by `etc/mtree/BSD.tests.dist` in the actual system, but this step is necessary for testing our program). Follow these commands within the `/usr/src/bin/pwd/` directory:
+
 ```
 $ make obj
 $ make depend
-$ make all install 
+$ make all install
 ```
-The the test program will be generated on /usr/tests/bin/pwd/. We can see there is our test program, pwd_test (pwd_test: a /usr/libexec/atf-sh script, ASCII text executable) and Kyuafile. We cay type `kyua test` to run the test know and see the test result matrix generate by kyua.
 
-# Testing case of pwd_test.sh
+This will generate the test program in the `/usr/tests/bin/pwd/` directory. You'll find our test program, `pwd_test` (a `/usr/libexec/atf-sh` script, ASCII text executable), and a `Kyuafile` there. To run the test and view the test result matrix generated by Kyua, use the following command:
+
+```
+$ kyua test
+$ kyua report --verbose  # See detailed report of last test result.
+```
+
+## Testing case of pwd_test.sh
+
 * Positive test
     * pwd, pwd -L, pwd -P in a simple directory. -> testcase name - basic.
     * pwd, pwd -L, pwd -P in a directory with a soft link in tha path. -> testcase name - soft_link
 * Negative test
   * pwd, pwd -L, pwd -P in a directory with broken soft link in tha path. -> testcase name - broken_soft_link
 
-We do the top test and check the ouput of the commadn is correct or not.
+## Makefile keyword tutorial
+1. Top Makefile
+```
+.include <src.opts.mk>
+
+HAS_TESTS=
+SUBDIR.${MK_TESTS}=	tests
+```
+
+
+2. Recurse Makefile
+```
+TESTSDIR=	${TESTSBASE}/sys/geom
+
+TESTS_SUBDIRS+=	class
+
+.include <bsd.test.mk>
+```
+
+3. End Makefile
+```
+PACKAGE=	tests
+
+ATF_TESTS_SH=	cp_test
+PROGS+=		sparse
+BINDIR=		${TESTSDIR}
+```
+
+```
+# A variable that represents the list of directories that make will search	for files.  The	search list should  be updated	using the target `.PATH' rather	than the variable.
+.PATH: ${SRCTOP}/sys/geom/eli ${SRCTOP}/sys/crypto/sha2
+
+PACKAGE=	tests
+
+# This line sets the warning level for the C compiler to 3, which indicates a relatively high level of warnings?
+WARNS?=		3
+
+# ${.CURDIR:T} to extract the last component of the current directory, which in this case is the name of the current directory (eli).
+TESTSDIR=	${TESTSBASE}/sys/geom/class/${.CURDIR:T}
+
+ATF_TESTS_C=	pbkdf2_test
+ATF_TESTS_SH+=	attach_test
+ATF_TESTS_SH+=	configure_test
+ATF_TESTS_SH+=	delkey_test
+ATF_TESTS_SH+=	detach_test
+ATF_TESTS_SH+=	init_test
+ATF_TESTS_SH+=	integrity_test
+ATF_TESTS_SH+=	kill_test
+ATF_TESTS_SH+=	misc_test
+ATF_TESTS_SH+=	onetime_test
+ATF_TESTS_SH+=	online_resize_test
+ATF_TESTS_SH+=	reentrancy_test
+ATF_TESTS_SH+=	resize_test
+ATF_TESTS_SH+=	setkey_test
+
+# This line adds the conf.sh file to the list of files associated with this test package.
+${PACKAGE}FILES+=		conf.sh
+
+# These lines specify build-related information for the pbkdf2_test program, including compiler flags, source files, and library dependencies.
+# -I flag is used to specify an additional directory where the compiler should look for header files.
+CFLAGS.pbkdf2_test=	-I${SRCTOP}/sys
+
+# This line specifies the source code files (C source files) that should be compiled to create the pbkdf2_test program.
+SRCS.pbkdf2_test=	\
+		hmac_test.c \
+		g_eli_crypto.c \
+		g_eli_hmac.c \
+		pkcs5v2.c \
+		sha512c.c \
+		sha256c.c
+
+# This line specifies the libraries that should be linked with the pbkdf2_test program.
+LIBADD.pbkdf2_test= crypto
+
+# These lines indicate that an additional program called unaligned_io should be built,
+# and it should be placed in the same directory where the tests are located 
+PROGS+= unaligned_io
+BINDIR?= ${TESTSDIR}
+
+# This appears to be a target for generating a test vector header file using a Python script (gentestvect.py).
+# The header file is generated when the testvect.h target is invoked.
+testvect.h:
+	python gentestvect.py > ${.TARGET}
+
+.include <bsd.test.mk>
+```
+
+Some pages you can refer.
+
+1. [MAKE(1)](https://man.freebsd.org/cgi/man.cgi?query=make&apropos=0&sektion=1&manpath=FreeBSD+15.0-CURRENT&arch=default&format=html)
+2. [STYLE.MAKEFILE(5)](https://man.freebsd.org/cgi/man.cgi?query=style.Makefile&sektion=5&format=html)
+3. [MAKE.CONF(5)](https://man.freebsd.org/cgi/man.cgi?query=make.conf&apropos=0&sektion=5&manpath=FreeBSD+15.0-CURRENT&arch=default&format=html)
+
+## Reference
+
+1. [DeveloperHowTo](https://wiki.freebsd.org/TestSuite/DeveloperHowTo)
+2. [Structure](https://wiki.freebsd.org/TestSuite/Structure)
+3. [TestingFreeBSDExamples](https://wiki.freebsd.org/TestingFreeBSDExamples)
+4. [The FreeBSD Test Suite](https://www.youtube.com/watch?v=nf-bFeKaZsY)
+5. [THE Automated by Kristof Testing Framework Provost](https://freebsdfoundation.org/wp-content/uploads/2019/05/The-Automated-Testing-Framework.pdf)
+6. [FreeBSD Test Suit 介紹](https://cozy-kola.medium.com/freebsd-kernel-unit-test-e21be1ab2b3a).
+
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first
+to discuss what you would like to change.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
