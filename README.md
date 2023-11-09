@@ -43,7 +43,7 @@ This will generate the test program in the `/usr/tests/bin/pwd/` directory. You'
 
 ```
 $ kyua test
-$ kyua report --verbose  # See detailed report of last test result.
+$ kyua report --verbose  # See detailed report of last test result. See man page, https://man.freebsd.org/cgi/man.cgi?query=kyua-report&sektion=1&apropos=0&manpath=FreeBSD+13.2-RELEASE+and+Ports
 ```
 
 ## Testing case of pwd_test.sh
